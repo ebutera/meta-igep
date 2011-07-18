@@ -1,0 +1,8 @@
+This layer depends on:
+
+URI: git://git.angstrom-distribution.org/meta-texasinstruments
+branch: master
+revision: HEAD
+
+Layer maintainer: Enrico Butera <ebutera@users.berlios.de>
+
