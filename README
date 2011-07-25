@@ -16,4 +16,9 @@ setenv bootargs-base 'mem=99M@0x80000000 mem=384M@0x88000000 console=ttyO2,11520
 * Tested on...
 
 IGEPv2-OMAP3530: boot tested a console-image, cpufreq working (cpu scaling from 125MHz to 720MHz)
-IGEPv2-DM3730: boot tested a console-image, cpufreq NOT working (max cpu freq: 600MHz, needs patching)
+IGEPv2-DM3730: boot tested a console-image, cpufreq working (cpu scaling from 300MHz to 1GHz)
+
+* Note on DM3730
+
+Depending on silicon it is possible that it will not work reliably with high loads or dsp/sgx usage
+because of some missing smartreflex bits. Kernel 3.0 will support it so an update is planned.
