@@ -1,0 +1,48 @@
+From 8e4da2cf3bd0c5337bfe2d7f5127d0dddafbfbfa Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Sat, 13 Aug 2011 13:13:32 -0300
+Subject: [PATCH 06/25] omap3isp: video: Avoid crashes when pipeline set stream operation fails
+
+If streaming can't be enabled on the pipeline, the DMA buffers queue is
+not emptied. If the buffers then get freed the queue will end up
+referencing free memory. This is usually not an issue, as the DMA queue
+will be reinitialized the next time streaming is enabled, before
+enabling the hardware.
+
+However, if the sensor connected at the pipeline input is free-running,
+the CCDC will start generating interrupts as soon as it gets powered up,
+before the streaming gets enabled on the hardware. This will make the
+CCDC interrupt handler access freed memory, causing a crash.
+
+Reinitialize the DMA buffers queue in isp_video_streamon() if the error
+path to make sure this situation won't happen.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispvideo.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispvideo.c b/drivers/media/video/omap3isp/ispvideo.c
+index fd94cdf..ba86f11 100644
+--- a/drivers/media/video/omap3isp/ispvideo.c
++++ b/drivers/media/video/omap3isp/ispvideo.c
+@@ -1056,6 +1056,14 @@ error:
+ 		if (video->isp->pdata->set_constraints)
+ 			video->isp->pdata->set_constraints(video->isp, false);
+ 		media_entity_pipeline_stop(&video->video.entity);
++		/* The DMA queue must be emptied here, otherwise CCDC interrupts
++		 * that will get triggered the next time the CCDC is powered up
++		 * will try to access buffers that might have been freed but
++		 * still present in the DMA queue. This can easily get triggered
++		 * if the above omap3isp_pipeline_set_stream() call fails on a
++		 * system with a free-running sensor.
++		 */
++		INIT_LIST_HEAD(&video->dmaqueue);
+ 		video->queue = NULL;
+ 	}
+ 
+-- 
+1.7.4.1
+

@@ -1,0 +1,33 @@
+From 85978508eaa4e01be94ac7ffc5d536b507f8f884 Mon Sep 17 00:00:00 2001
+From: Michael Jones <michael.jones@matrix-vision.de>
+Date: Tue, 9 Aug 2011 08:42:20 +0200
+Subject: [PATCH 03/25] omap3isp: queue: fail QBUF if user buffer is too small
+
+Add buffer length check to sanity checks for USERPTR QBUF.
+
+Signed-off-by: Michael Jones <michael.jones@matrix-vision.de>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispqueue.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispqueue.c b/drivers/media/video/omap3isp/ispqueue.c
+index 9c31714..9bebb1e 100644
+--- a/drivers/media/video/omap3isp/ispqueue.c
++++ b/drivers/media/video/omap3isp/ispqueue.c
+@@ -868,6 +868,10 @@ int omap3isp_video_queue_qbuf(struct isp_video_queue *queue,
+ 		goto done;
+ 
+ 	if (vbuf->memory == V4L2_MEMORY_USERPTR &&
++	    vbuf->length < buf->vbuf.length)
++		goto done;
++
++	if (vbuf->memory == V4L2_MEMORY_USERPTR &&
+ 	    vbuf->m.userptr != buf->vbuf.m.userptr) {
+ 		isp_video_buffer_cleanup(buf);
+ 		buf->vbuf.m.userptr = vbuf->m.userptr;
+-- 
+1.7.4.1
+

@@ -1,0 +1,30 @@
+From 784314f69f2076385d82c8d7f7a6ec2e874bfa1a Mon Sep 17 00:00:00 2001
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Date: Thu, 29 Sep 2011 12:57:00 +0200
+Subject: [PATCH 11/25] omap3isp: ccdc: remove redundant operation
+
+Trivial arithmetics clean up.
+
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispccdc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispccdc.c b/drivers/media/video/omap3isp/ispccdc.c
+index f3a97c1..90a0684 100644
+--- a/drivers/media/video/omap3isp/ispccdc.c
++++ b/drivers/media/video/omap3isp/ispccdc.c
+@@ -1828,7 +1828,7 @@ ccdc_try_format(struct isp_ccdc_device *ccdc, struct v4l2_subdev_fh *fh,
+ 		 * callers to request an output size bigger than the input size
+ 		 * up to the nearest multiple of 16.
+ 		 */
+-		fmt->width = clamp_t(u32, width, 32, (fmt->width + 15) & ~15);
++		fmt->width = clamp_t(u32, width, 32, fmt->width + 15);
+ 		fmt->width &= ~15;
+ 		fmt->height = clamp_t(u32, height, 32, fmt->height);
+ 		break;
+-- 
+1.7.4.1
+

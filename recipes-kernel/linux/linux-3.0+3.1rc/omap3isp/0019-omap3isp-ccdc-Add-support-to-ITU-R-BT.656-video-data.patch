@@ -1,0 +1,204 @@
+From 81ad1a49a6871b118bf0efe6b66b58927da1d473 Mon Sep 17 00:00:00 2001
+From: Javier Martinez Canillas <martinez.javier@gmail.com>
+Date: Sun, 9 Oct 2011 15:26:43 +0200
+Subject: [PATCH 19/25] omap3isp: ccdc: Add support to ITU-R BT.656 video data format
+
+This patch adds to the ISP CCDC driver the ability to deinterlace video
+data when configured in interlaced mode and send progressive frames to
+user-space V4L2 applications.
+
+Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispccdc.c |  104 ++++++++++++++++++++++++++------
+ 1 files changed, 85 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispccdc.c b/drivers/media/video/omap3isp/ispccdc.c
+index ce0e57d..f1da49c 100644
+--- a/drivers/media/video/omap3isp/ispccdc.c
++++ b/drivers/media/video/omap3isp/ispccdc.c
+@@ -41,6 +41,8 @@
+ static struct v4l2_mbus_framefmt *
+ __ccdc_get_format(struct isp_ccdc_device *ccdc, struct v4l2_subdev_fh *fh,
+ 		  unsigned int pad, enum v4l2_subdev_format_whence which);
++static bool ccdc_input_is_bt656(struct isp_ccdc_device *ccdc);
++static bool ccdc_input_is_fldmode(struct isp_ccdc_device *ccdc);
+ 
+ static const unsigned int ccdc_fmts[] = {
+ 	V4L2_MBUS_FMT_Y8_1X8,
+@@ -890,12 +892,6 @@ static void ccdc_config_outlineoffset(struct isp_ccdc_device *ccdc,
+ 	isp_reg_writel(isp, offset & 0xffff,
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_HSIZE_OFF);
+ 
+-	isp_reg_clr(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SDOFST,
+-		    ISPCCDC_SDOFST_FINV);
+-
+-	isp_reg_clr(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SDOFST,
+-		    ISPCCDC_SDOFST_FOFST_4L);
+-
+ 	switch (oddeven) {
+ 	case EVENEVEN:
+ 		isp_reg_set(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SDOFST,
+@@ -1011,6 +1007,9 @@ static void ccdc_config_sync_if(struct isp_ccdc_device *ccdc,
+ 	if (pdata && pdata->vs_pol)
+ 		syn_mode |= ISPCCDC_SYN_MODE_VDPOL;
+ 
++	if (pdata && pdata->fldmode)
++		syn_mode |= ISPCCDC_SYN_MODE_FLDMODE;
++
+ 	isp_reg_writel(isp, syn_mode, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SYN_MODE);
+ 
+ 	if (format->code == V4L2_MBUS_FMT_UYVY8_2X8)
+@@ -1116,6 +1115,10 @@ static void ccdc_configure(struct isp_ccdc_device *ccdc)
+ 	unsigned int shift;
+ 	u32 syn_mode;
+ 	u32 ccdc_pattern;
++	u32 nph;
++	u32 nlv;
++	u32 vd0;
++	u32 vd1;
+ 
+ 	pad = media_entity_remote_source(&ccdc->pads[CCDC_PAD_SINK]);
+ 	sensor = media_entity_to_v4l2_subdev(pad->entity);
+@@ -1186,26 +1189,49 @@ static void ccdc_configure(struct isp_ccdc_device *ccdc)
+ 	}
+ 	ccdc_config_imgattr(ccdc, ccdc_pattern);
+ 
++	/* In BT.656 a pixel is representd using two bytes */
++	if (pdata->bt656)
++		nph = format->width * 2 - 1;
++	else
++		nph = format->width - 1;
++
++	/* In interlaced mode a frame is composed fo two subrames */
++	if (pdata->fldmode) {
++		vd0 = nlv = format->height / 2 - 1;
++		vd1 = format->height / 3;
++	} else {
++		vd0 = nlv = format->height - 2;
++		vd1 = format->height * 2 / 3;
++	}
++
+ 	/* Generate VD0 on the last line of the image and VD1 on the
+ 	 * 2/3 height line.
+ 	 */
+-	isp_reg_writel(isp, ((format->height - 2) << ISPCCDC_VDINT_0_SHIFT) |
+-		       ((format->height * 2 / 3) << ISPCCDC_VDINT_1_SHIFT),
++	isp_reg_writel(isp, (vd0 << ISPCCDC_VDINT_0_SHIFT) |
++		       (vd1 << ISPCCDC_VDINT_1_SHIFT),
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VDINT);
+ 
+ 	/* CCDC_PAD_SOURCE_OF */
+ 	format = &ccdc->formats[CCDC_PAD_SOURCE_OF];
+ 
+ 	isp_reg_writel(isp, (0 << ISPCCDC_HORZ_INFO_SPH_SHIFT) |
+-		       ((format->width - 1) << ISPCCDC_HORZ_INFO_NPH_SHIFT),
++		       (nph << ISPCCDC_HORZ_INFO_NPH_SHIFT),
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_HORZ_INFO);
+ 	isp_reg_writel(isp, 0 << ISPCCDC_VERT_START_SLV0_SHIFT,
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_START);
+-	isp_reg_writel(isp, (format->height - 1)
+-			<< ISPCCDC_VERT_LINES_NLV_SHIFT,
++	isp_reg_writel(isp, nlv << ISPCCDC_VERT_LINES_NLV_SHIFT,
+ 		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_LINES);
++	isp_reg_writel(isp, 0 << ISPCCDC_VERT_START_SLV1_SHIFT,
++		       OMAP3_ISP_IOMEM_CCDC, ISPCCDC_VERT_START);
+ 
+-	ccdc_config_outlineoffset(ccdc, ccdc->video_out.bpl_value, 0, 0);
++
++	if (pdata->fldmode) {
++		ccdc_config_outlineoffset(ccdc, nph, EVENEVEN, 1);
++		ccdc_config_outlineoffset(ccdc, nph, EVENODD, 1);
++		ccdc_config_outlineoffset(ccdc, nph, ODDEVEN, 1);
++		ccdc_config_outlineoffset(ccdc, nph, ODDODD, 1);
++	} else
++		ccdc_config_outlineoffset(ccdc, ccdc->video_out.bpl_value, 0, 0);
+ 
+ 	/* CCDC_PAD_SOURCE_VP */
+ 	format = &ccdc->formats[CCDC_PAD_SOURCE_VP];
+@@ -1493,10 +1519,30 @@ static int ccdc_isr_buffer(struct isp_ccdc_device *ccdc)
+ 		goto done;
+ 	}
+ 
+-	buffer = omap3isp_video_buffer_next(&ccdc->video_out, ccdc->error);
+-	if (buffer != NULL) {
+-		ccdc_set_outaddr(ccdc, buffer->isp_addr);
+-		restart = 1;
++	/* In interlaced mode a frame is composed of two subframes so we don't have
++	 * to change the CCDC output memory on every end of frame.
++	 */
++	if (!ccdc_input_is_fldmode(ccdc)) {
++		if (!ccdc->interlaced_cnt) {
++			ccdc->interlaced_cnt = 1;
++			restart = 1;
++		} else {
++			ccdc->interlaced_cnt = 0;
++			buffer = omap3isp_video_buffer_next(&ccdc->video_out,
++							    ccdc->error);
++			if (buffer != NULL) {
++				ccdc_set_outaddr(ccdc, buffer->isp_addr);
++				restart = 1;
++			}
++		}
++	} else {
++		buffer = omap3isp_video_buffer_next(&ccdc->video_out,
++						    ccdc->error);
++		if (buffer != NULL) {
++			ccdc_set_outaddr(ccdc, buffer->isp_addr);
++			restart = 1;
++		}
++
+ 	}
+ 
+ 	pipe->state |= ISP_PIPELINE_IDLE_OUTPUT;
+@@ -1758,6 +1804,7 @@ static int ccdc_set_stream(struct v4l2_subdev *sd, int enable)
+ 			omap3isp_sbl_disable(isp, OMAP3_ISP_SBL_CCDC_WRITE);
+ 		omap3isp_subclk_disable(isp, OMAP3_ISP_SUBCLK_CCDC);
+ 		ccdc->underrun = 0;
++		ccdc->interlaced_cnt = 0;
+ 		break;
+ 	}
+ 
+@@ -1775,9 +1822,9 @@ __ccdc_get_format(struct isp_ccdc_device *ccdc, struct v4l2_subdev_fh *fh,
+ 		return &ccdc->formats[pad];
+ }
+ 
+-static bool ccdc_input_is_bt656(struct isp_ccdc_device *ccdc)
++struct isp_parallel_platform_data *ccdc_get_pdata(struct isp_ccdc_device *ccdc)
+ {
+-	const struct isp_parallel_platform_data *pdata = NULL;
++	struct isp_parallel_platform_data *pdata = NULL;
+ 	const struct v4l2_subdev *sensor;
+ 	const struct media_pad *pad;
+ 
+@@ -1787,7 +1834,26 @@ static bool ccdc_input_is_bt656(struct isp_ccdc_device *ccdc)
+ 	pad = media_entity_remote_source(&ccdc->pads[CCDC_PAD_SINK]);
+ 	sensor = media_entity_to_v4l2_subdev(pad->entity);
+ 	pdata = &((struct isp_v4l2_subdevs_group *)sensor->host_priv)
+-		->bus.parallel;
++		 ->bus.parallel;
++
++	return pdata;
++}
++
++static bool ccdc_input_is_fldmode(struct isp_ccdc_device *ccdc)
++
++{
++	const struct isp_parallel_platform_data *pdata = NULL;
++
++	pdata = ccdc_get_pdata(ccdc);
++
++	return pdata && pdata->bt656;
++}
++
++static bool ccdc_input_is_bt656(struct isp_ccdc_device *ccdc)
++{
++	const struct isp_parallel_platform_data *pdata = NULL;
++
++	pdata = ccdc_get_pdata(ccdc);
+ 
+ 	return pdata && pdata->bt656;
+ }
+-- 
+1.7.4.1
+
