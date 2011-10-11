@@ -12,11 +12,19 @@ At the u-boot prompt of a stock IGEPv2 board:
 
 setenv bootargs-base 'mem=99M@0x80000000 mem=384M@0x88000000 console=ttyO2,115200n8 console=tty0 omapfb.mode=dvi:1280x720MR-16@60 mpurate=auto'
 
+IGEPv2 + expansion board rev.B:
+
+setenv bootargs-base 'mem=99M@0x80000000 mem=384M@0x88000000 console=ttyO2,115200n8 buddy=igep0022 buddy.modem=yes buddy.revision=B nohlt'
+
+Note: the "nohlt" parameter is needed when capturing video because of a bug that is still not fixed.
+
 
 * Tested on...
 
 IGEPv2-OMAP3530: boot tested a console-image, cpufreq working (cpu scaling from 125MHz to 720MHz)
 IGEPv2-DM3730: boot tested a console-image, cpufreq working (cpu scaling from 300MHz to 1GHz)
+
+IGEPv2-OMAP3530 + expansion board rev.B: tested video capture with PAL source.
 
 * Note on DM3730
 
