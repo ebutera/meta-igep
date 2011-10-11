@@ -1,0 +1,263 @@
+From 585b27e31bff40e2ad5e6b5943bcfb187f8f4c50 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Thu, 22 Sep 2011 21:54:34 +0200
+Subject: [PATCH 07/27] omap3isp: Move media_entity_cleanup() from unregister() to cleanup()
+
+The media_entity_cleanup() function belong to the module cleanup
+handlers, not the entity registration handlers. Move it there.
+
+Create a omap3isp_video_cleanup() function to cleanup the video node
+entity, and call it from the module cleanup handlers.
+
+Rename omap3isp_stat_free() to omap3isp_stat_cleanup().
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispccdc.c     |    5 +++--
+ drivers/media/video/omap3isp/ispccp2.c     |    5 +++--
+ drivers/media/video/omap3isp/ispcsi2.c     |    6 ++++--
+ drivers/media/video/omap3isp/isph3a_aewb.c |    2 +-
+ drivers/media/video/omap3isp/isph3a_af.c   |    2 +-
+ drivers/media/video/omap3isp/isphist.c     |    2 +-
+ drivers/media/video/omap3isp/isppreview.c  |    9 ++++++---
+ drivers/media/video/omap3isp/ispresizer.c  |    7 +++++--
+ drivers/media/video/omap3isp/ispstat.c     |    4 ++--
+ drivers/media/video/omap3isp/ispstat.h     |    2 +-
+ drivers/media/video/omap3isp/ispvideo.c    |    9 ++++++---
+ drivers/media/video/omap3isp/ispvideo.h    |    1 +
+ 12 files changed, 34 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispccdc.c b/drivers/media/video/omap3isp/ispccdc.c
+index 80796eb..1e6a3df 100644
+--- a/drivers/media/video/omap3isp/ispccdc.c
++++ b/drivers/media/video/omap3isp/ispccdc.c
+@@ -2198,8 +2198,6 @@ static int ccdc_init_entities(struct isp_ccdc_device *ccdc)
+ 
+ void omap3isp_ccdc_unregister_entities(struct isp_ccdc_device *ccdc)
+ {
+-	media_entity_cleanup(&ccdc->subdev.entity);
+-
+ 	v4l2_device_unregister_subdev(&ccdc->subdev);
+ 	omap3isp_video_unregister(&ccdc->video_out);
+ }
+@@ -2279,6 +2277,9 @@ void omap3isp_ccdc_cleanup(struct isp_device *isp)
+ {
+ 	struct isp_ccdc_device *ccdc = &isp->isp_ccdc;
+ 
++	omap3isp_video_cleanup(&ccdc->video_out);
++	media_entity_cleanup(&ccdc->subdev.entity);
++
+ 	/* Free LSC requests. As the CCDC is stopped there's no active request,
+ 	 * so only the pending request and the free queue need to be handled.
+ 	 */
+diff --git a/drivers/media/video/omap3isp/ispccp2.c b/drivers/media/video/omap3isp/ispccp2.c
+index fa1d09b..b8e0863 100644
+--- a/drivers/media/video/omap3isp/ispccp2.c
++++ b/drivers/media/video/omap3isp/ispccp2.c
+@@ -1100,8 +1100,6 @@ static int ccp2_init_entities(struct isp_ccp2_device *ccp2)
+  */
+ void omap3isp_ccp2_unregister_entities(struct isp_ccp2_device *ccp2)
+ {
+-	media_entity_cleanup(&ccp2->subdev.entity);
+-
+ 	v4l2_device_unregister_subdev(&ccp2->subdev);
+ 	omap3isp_video_unregister(&ccp2->video_in);
+ }
+@@ -1146,6 +1144,9 @@ void omap3isp_ccp2_cleanup(struct isp_device *isp)
+ {
+ 	struct isp_ccp2_device *ccp2 = &isp->isp_ccp2;
+ 
++	omap3isp_video_cleanup(&ccp2->video_in);
++	media_entity_cleanup(&ccp2->subdev.entity);
++
+ 	regulator_put(ccp2->vdds_csib);
+ }
+ 
+diff --git a/drivers/media/video/omap3isp/ispcsi2.c b/drivers/media/video/omap3isp/ispcsi2.c
+index 69161a6..5612e95 100644
+--- a/drivers/media/video/omap3isp/ispcsi2.c
++++ b/drivers/media/video/omap3isp/ispcsi2.c
+@@ -1241,8 +1241,6 @@ static int csi2_init_entities(struct isp_csi2_device *csi2)
+ 
+ void omap3isp_csi2_unregister_entities(struct isp_csi2_device *csi2)
+ {
+-	media_entity_cleanup(&csi2->subdev.entity);
+-
+ 	v4l2_device_unregister_subdev(&csi2->subdev);
+ 	omap3isp_video_unregister(&csi2->video_out);
+ }
+@@ -1277,6 +1275,10 @@ error:
+  */
+ void omap3isp_csi2_cleanup(struct isp_device *isp)
+ {
++	struct isp_csi2_device *csi2a = &isp->isp_csi2a;
++
++	omap3isp_video_cleanup(&csi2a->video_out);
++	media_entity_cleanup(&csi2a->subdev.entity);
+ }
+ 
+ /*
+diff --git a/drivers/media/video/omap3isp/isph3a_aewb.c b/drivers/media/video/omap3isp/isph3a_aewb.c
+index 8068cef..a3c76bf 100644
+--- a/drivers/media/video/omap3isp/isph3a_aewb.c
++++ b/drivers/media/video/omap3isp/isph3a_aewb.c
+@@ -370,5 +370,5 @@ void omap3isp_h3a_aewb_cleanup(struct isp_device *isp)
+ {
+ 	kfree(isp->isp_aewb.priv);
+ 	kfree(isp->isp_aewb.recover_priv);
+-	omap3isp_stat_free(&isp->isp_aewb);
++	omap3isp_stat_cleanup(&isp->isp_aewb);
+ }
+diff --git a/drivers/media/video/omap3isp/isph3a_af.c b/drivers/media/video/omap3isp/isph3a_af.c
+index ba54d0a..58e0bc4 100644
+--- a/drivers/media/video/omap3isp/isph3a_af.c
++++ b/drivers/media/video/omap3isp/isph3a_af.c
+@@ -425,5 +425,5 @@ void omap3isp_h3a_af_cleanup(struct isp_device *isp)
+ {
+ 	kfree(isp->isp_af.priv);
+ 	kfree(isp->isp_af.recover_priv);
+-	omap3isp_stat_free(&isp->isp_af);
++	omap3isp_stat_cleanup(&isp->isp_af);
+ }
+diff --git a/drivers/media/video/omap3isp/isphist.c b/drivers/media/video/omap3isp/isphist.c
+index 1743856..1163907 100644
+--- a/drivers/media/video/omap3isp/isphist.c
++++ b/drivers/media/video/omap3isp/isphist.c
+@@ -516,5 +516,5 @@ void omap3isp_hist_cleanup(struct isp_device *isp)
+ 	if (HIST_USING_DMA(&isp->isp_hist))
+ 		omap_free_dma(isp->isp_hist.dma_ch);
+ 	kfree(isp->isp_hist.priv);
+-	omap3isp_stat_free(&isp->isp_hist);
++	omap3isp_stat_cleanup(&isp->isp_hist);
+ }
+diff --git a/drivers/media/video/omap3isp/isppreview.c b/drivers/media/video/omap3isp/isppreview.c
+index aba537a..84a18b6 100644
+--- a/drivers/media/video/omap3isp/isppreview.c
++++ b/drivers/media/video/omap3isp/isppreview.c
+@@ -2046,10 +2046,7 @@ static int preview_init_entities(struct isp_prev_device *prev)
+ 
+ void omap3isp_preview_unregister_entities(struct isp_prev_device *prev)
+ {
+-	media_entity_cleanup(&prev->subdev.entity);
+-
+ 	v4l2_device_unregister_subdev(&prev->subdev);
+-	v4l2_ctrl_handler_free(&prev->ctrls);
+ 	omap3isp_video_unregister(&prev->video_in);
+ 	omap3isp_video_unregister(&prev->video_out);
+ }
+@@ -2085,6 +2082,12 @@ error:
+ 
+ void omap3isp_preview_cleanup(struct isp_device *isp)
+ {
++	struct isp_prev_device *prev = &isp->isp_prev;
++
++	v4l2_ctrl_handler_free(&prev->ctrls);
++	omap3isp_video_cleanup(&prev->video_in);
++	omap3isp_video_cleanup(&prev->video_out);
++	media_entity_cleanup(&prev->subdev.entity);
+ }
+ 
+ /*
+diff --git a/drivers/media/video/omap3isp/ispresizer.c b/drivers/media/video/omap3isp/ispresizer.c
+index 0bb0f8c..78ce040 100644
+--- a/drivers/media/video/omap3isp/ispresizer.c
++++ b/drivers/media/video/omap3isp/ispresizer.c
+@@ -1674,8 +1674,6 @@ static int resizer_init_entities(struct isp_res_device *res)
+ 
+ void omap3isp_resizer_unregister_entities(struct isp_res_device *res)
+ {
+-	media_entity_cleanup(&res->subdev.entity);
+-
+ 	v4l2_device_unregister_subdev(&res->subdev);
+ 	omap3isp_video_unregister(&res->video_in);
+ 	omap3isp_video_unregister(&res->video_out);
+@@ -1712,6 +1710,11 @@ error:
+ 
+ void omap3isp_resizer_cleanup(struct isp_device *isp)
+ {
++	struct isp_res_device *res = &isp->isp_res;
++
++	omap3isp_video_cleanup(&res->video_in);
++	omap3isp_video_cleanup(&res->video_out);
++	media_entity_cleanup(&res->subdev.entity);
+ }
+ 
+ /*
+diff --git a/drivers/media/video/omap3isp/ispstat.c b/drivers/media/video/omap3isp/ispstat.c
+index 8080659..4ffddd2 100644
+--- a/drivers/media/video/omap3isp/ispstat.c
++++ b/drivers/media/video/omap3isp/ispstat.c
+@@ -1061,7 +1061,6 @@ int omap3isp_stat_unsubscribe_event(struct v4l2_subdev *subdev,
+ 
+ void omap3isp_stat_unregister_entities(struct ispstat *stat)
+ {
+-	media_entity_cleanup(&stat->subdev.entity);
+ 	v4l2_device_unregister_subdev(&stat->subdev);
+ }
+ 
+@@ -1084,8 +1083,9 @@ int omap3isp_stat_init(struct ispstat *stat, const char *name,
+ 	return isp_stat_init_entities(stat, name, sd_ops);
+ }
+ 
+-void omap3isp_stat_free(struct ispstat *stat)
++void omap3isp_stat_cleanup(struct ispstat *stat)
+ {
++	media_entity_cleanup(&stat->subdev.entity);
+ 	isp_stat_bufs_free(stat);
+ 	kfree(stat->buf);
+ }
+diff --git a/drivers/media/video/omap3isp/ispstat.h b/drivers/media/video/omap3isp/ispstat.h
+index d86da94..9b7c865 100644
+--- a/drivers/media/video/omap3isp/ispstat.h
++++ b/drivers/media/video/omap3isp/ispstat.h
+@@ -144,7 +144,7 @@ int omap3isp_stat_request_statistics(struct ispstat *stat,
+ 				     struct omap3isp_stat_data *data);
+ int omap3isp_stat_init(struct ispstat *stat, const char *name,
+ 		       const struct v4l2_subdev_ops *sd_ops);
+-void omap3isp_stat_free(struct ispstat *stat);
++void omap3isp_stat_cleanup(struct ispstat *stat);
+ int omap3isp_stat_subscribe_event(struct v4l2_subdev *subdev,
+ 				  struct v4l2_fh *fh,
+ 				  struct v4l2_event_subscription *sub);
+diff --git a/drivers/media/video/omap3isp/ispvideo.c b/drivers/media/video/omap3isp/ispvideo.c
+index ba86f11..910c745 100644
+--- a/drivers/media/video/omap3isp/ispvideo.c
++++ b/drivers/media/video/omap3isp/ispvideo.c
+@@ -1325,6 +1325,11 @@ int omap3isp_video_init(struct isp_video *video, const char *name)
+ 	return 0;
+ }
+ 
++void omap3isp_video_cleanup(struct isp_video *video)
++{
++	media_entity_cleanup(&video->video.entity);
++}
++
+ int omap3isp_video_register(struct isp_video *video, struct v4l2_device *vdev)
+ {
+ 	int ret;
+@@ -1341,8 +1346,6 @@ int omap3isp_video_register(struct isp_video *video, struct v4l2_device *vdev)
+ 
+ void omap3isp_video_unregister(struct isp_video *video)
+ {
+-	if (video_is_registered(&video->video)) {
+-		media_entity_cleanup(&video->video.entity);
++	if (video_is_registered(&video->video))
+ 		video_unregister_device(&video->video);
+-	}
+ }
+diff --git a/drivers/media/video/omap3isp/ispvideo.h b/drivers/media/video/omap3isp/ispvideo.h
+index 53160aa..08cbfa1 100644
+--- a/drivers/media/video/omap3isp/ispvideo.h
++++ b/drivers/media/video/omap3isp/ispvideo.h
+@@ -190,6 +190,7 @@ struct isp_video_fh {
+ 				container_of(q, struct isp_video_fh, queue)
+ 
+ int omap3isp_video_init(struct isp_video *video, const char *name);
++void omap3isp_video_cleanup(struct isp_video *video);
+ int omap3isp_video_register(struct isp_video *video,
+ 			    struct v4l2_device *vdev);
+ void omap3isp_video_unregister(struct isp_video *video);
+-- 
+1.7.4.1
+

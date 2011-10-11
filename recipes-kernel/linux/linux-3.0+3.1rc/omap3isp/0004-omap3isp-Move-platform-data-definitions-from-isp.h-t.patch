@@ -1,0 +1,299 @@
+From 76ffafc156f6498706731d00d5364b0774bd3c4d Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Fri, 12 Aug 2011 19:09:34 +0200
+Subject: [PATCH 04/27] omap3isp: Move platform data definitions from isp.h to media/omap3isp.h
+
+drivers/media/video/omap3isp/isp.h is not a proper location for a header
+that needs to be included from board code. Move the platform data
+definitions to media/omap3isp.h.
+
+Board code still needs to include isp.h to get the struct isp_device
+definition and access OMAP3 ISP platform callbacks. Those callbacks will
+be replaced by more generic code.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Acked-by: Sakari Ailus <sakari.ailus@iki.fi>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/isp.h     |   85 +-------------------
+ drivers/media/video/omap3isp/ispccp2.c |    4 +-
+ include/media/omap3isp.h               |  140 ++++++++++++++++++++++++++++++++
+ 3 files changed, 143 insertions(+), 86 deletions(-)
+ create mode 100644 include/media/omap3isp.h
+
+diff --git a/drivers/media/video/omap3isp/isp.h b/drivers/media/video/omap3isp/isp.h
+index 529e582..521db0c 100644
+--- a/drivers/media/video/omap3isp/isp.h
++++ b/drivers/media/video/omap3isp/isp.h
+@@ -27,6 +27,7 @@
+ #ifndef OMAP3_ISP_CORE_H
+ #define OMAP3_ISP_CORE_H
+ 
++#include <media/omap3isp.h>
+ #include <media/v4l2-device.h>
+ #include <linux/device.h>
+ #include <linux/io.h>
+@@ -94,14 +95,6 @@ enum isp_subclk_resource {
+ 	OMAP3_ISP_SUBCLK_RESIZER	= (1 << 4),
+ };
+ 
+-enum isp_interface_type {
+-	ISP_INTERFACE_PARALLEL,
+-	ISP_INTERFACE_CSI2A_PHY2,
+-	ISP_INTERFACE_CCP2B_PHY1,
+-	ISP_INTERFACE_CCP2B_PHY2,
+-	ISP_INTERFACE_CSI2C_PHY1,
+-};
+-
+ /* ISP: OMAP 34xx ES 1.0 */
+ #define ISP_REVISION_1_0		0x10
+ /* ISP2: OMAP 34xx ES 2.0, 2.1 and 3.0 */
+@@ -130,82 +123,6 @@ struct isp_reg {
+ 	u32 val;
+ };
+ 
+-/**
+- * struct isp_parallel_platform_data - Parallel interface platform data
+- * @data_lane_shift: Data lane shifter
+- *		0 - CAMEXT[13:0] -> CAM[13:0]
+- *		1 - CAMEXT[13:2] -> CAM[11:0]
+- *		2 - CAMEXT[13:4] -> CAM[9:0]
+- *		3 - CAMEXT[13:6] -> CAM[7:0]
+- * @clk_pol: Pixel clock polarity
+- *		0 - Non Inverted, 1 - Inverted
+- * @hs_pol: Horizontal synchronization polarity
+- *		0 - Active high, 1 - Active low
+- * @vs_pol: Vertical synchronization polarity
+- *		0 - Active high, 1 - Active low
+- * @bridge: CCDC Bridge input control
+- *		ISPCTRL_PAR_BRIDGE_DISABLE - Disable
+- *		ISPCTRL_PAR_BRIDGE_LENDIAN - Little endian
+- *		ISPCTRL_PAR_BRIDGE_BENDIAN - Big endian
+- */
+-struct isp_parallel_platform_data {
+-	unsigned int data_lane_shift:2;
+-	unsigned int clk_pol:1;
+-	unsigned int hs_pol:1;
+-	unsigned int vs_pol:1;
+-	unsigned int bridge:4;
+-};
+-
+-/**
+- * struct isp_ccp2_platform_data - CCP2 interface platform data
+- * @strobe_clk_pol: Strobe/clock polarity
+- *		0 - Non Inverted, 1 - Inverted
+- * @crc: Enable the cyclic redundancy check
+- * @ccp2_mode: Enable CCP2 compatibility mode
+- *		0 - MIPI-CSI1 mode, 1 - CCP2 mode
+- * @phy_layer: Physical layer selection
+- *		ISPCCP2_CTRL_PHY_SEL_CLOCK - Data/clock physical layer
+- *		ISPCCP2_CTRL_PHY_SEL_STROBE - Data/strobe physical layer
+- * @vpclk_div: Video port output clock control
+- */
+-struct isp_ccp2_platform_data {
+-	unsigned int strobe_clk_pol:1;
+-	unsigned int crc:1;
+-	unsigned int ccp2_mode:1;
+-	unsigned int phy_layer:1;
+-	unsigned int vpclk_div:2;
+-};
+-
+-/**
+- * struct isp_csi2_platform_data - CSI2 interface platform data
+- * @crc: Enable the cyclic redundancy check
+- * @vpclk_div: Video port output clock control
+- */
+-struct isp_csi2_platform_data {
+-	unsigned crc:1;
+-	unsigned vpclk_div:2;
+-};
+-
+-struct isp_subdev_i2c_board_info {
+-	struct i2c_board_info *board_info;
+-	int i2c_adapter_id;
+-};
+-
+-struct isp_v4l2_subdevs_group {
+-	struct isp_subdev_i2c_board_info *subdevs;
+-	enum isp_interface_type interface;
+-	union {
+-		struct isp_parallel_platform_data parallel;
+-		struct isp_ccp2_platform_data ccp2;
+-		struct isp_csi2_platform_data csi2;
+-	} bus; /* gcc < 4.6.0 chokes on anonymous union initializers */
+-};
+-
+-struct isp_platform_data {
+-	struct isp_v4l2_subdevs_group *subdevs;
+-	void (*set_constraints)(struct isp_device *isp, bool enable);
+-};
+-
+ struct isp_platform_callback {
+ 	u32 (*set_xclk)(struct isp_device *isp, u32 xclk, u8 xclksel);
+ 	int (*csiphy_config)(struct isp_csiphy *phy,
+diff --git a/drivers/media/video/omap3isp/ispccp2.c b/drivers/media/video/omap3isp/ispccp2.c
+index ec9e395..fa1d09b 100644
+--- a/drivers/media/video/omap3isp/ispccp2.c
++++ b/drivers/media/video/omap3isp/ispccp2.c
+@@ -243,9 +243,9 @@ static int ccp2_phyif_config(struct isp_ccp2_device *ccp2,
+ 
+ 	val = isp_reg_readl(isp, OMAP3_ISP_IOMEM_CCP2, ISPCCP2_CTRL);
+ 	if (!(val & ISPCCP2_CTRL_MODE)) {
+-		if (pdata->ccp2_mode)
++		if (pdata->ccp2_mode == ISP_CCP2_MODE_CCP2)
+ 			dev_warn(isp->dev, "OMAP3 CCP2 bus not available\n");
+-		if (pdata->phy_layer == ISPCCP2_CTRL_PHY_SEL_STROBE)
++		if (pdata->phy_layer == ISP_CCP2_PHY_DATA_STROBE)
+ 			/* Strobe mode requires CCP2 */
+ 			return -EIO;
+ 	}
+diff --git a/include/media/omap3isp.h b/include/media/omap3isp.h
+new file mode 100644
+index 0000000..e917b1d
+--- /dev/null
++++ b/include/media/omap3isp.h
+@@ -0,0 +1,140 @@
++/*
++ * omap3isp.h
++ *
++ * TI OMAP3 ISP - Platform data
++ *
++ * Copyright (C) 2011 Nokia Corporation
++ *
++ * Contacts: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *	     Sakari Ailus <sakari.ailus@iki.fi>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ */
++
++#ifndef __MEDIA_OMAP3ISP_H__
++#define __MEDIA_OMAP3ISP_H__
++
++struct i2c_board_info;
++struct isp_device;
++
++enum isp_interface_type {
++	ISP_INTERFACE_PARALLEL,
++	ISP_INTERFACE_CSI2A_PHY2,
++	ISP_INTERFACE_CCP2B_PHY1,
++	ISP_INTERFACE_CCP2B_PHY2,
++	ISP_INTERFACE_CSI2C_PHY1,
++};
++
++enum {
++	ISP_BRIDGE_DISABLE = 0,
++	ISP_BRIDGE_LITTLE_ENDIAN = 2,
++	ISP_BRIDGE_BIG_ENDIAN = 3,
++};
++
++enum {
++	ISP_LANE_SHIFT_0 = 0,
++	ISP_LANE_SHIFT_2 = 1,
++	ISP_LANE_SHIFT_4 = 2,
++	ISP_LANE_SHIFT_6 = 3,
++};
++
++/**
++ * struct isp_parallel_platform_data - Parallel interface platform data
++ * @data_lane_shift: Data lane shifter
++ *		ISP_LANE_SHIFT_0 - CAMEXT[13:0] -> CAM[13:0]
++ *		ISP_LANE_SHIFT_2 - CAMEXT[13:2] -> CAM[11:0]
++ *		ISP_LANE_SHIFT_4 - CAMEXT[13:4] -> CAM[9:0]
++ *		ISP_LANE_SHIFT_6 - CAMEXT[13:6] -> CAM[7:0]
++ * @clk_pol: Pixel clock polarity
++ *		0 - Non Inverted, 1 - Inverted
++ * @hs_pol: Horizontal synchronization polarity
++ *		0 - Active high, 1 - Active low
++ * @vs_pol: Vertical synchronization polarity
++ *		0 - Active high, 1 - Active low
++ * @bridge: CCDC Bridge input control
++ *		ISP_BRIDGE_DISABLE - Disable
++ *		ISP_BRIDGE_LITTLE_ENDIAN - Little endian
++ *		ISP_BRIDGE_BIG_ENDIAN - Big endian
++ */
++struct isp_parallel_platform_data {
++	unsigned int data_lane_shift:2;
++	unsigned int clk_pol:1;
++	unsigned int hs_pol:1;
++	unsigned int vs_pol:1;
++	unsigned int bridge:2;
++};
++
++enum {
++	ISP_CCP2_PHY_DATA_CLOCK = 0,
++	ISP_CCP2_PHY_DATA_STROBE = 1,
++};
++
++enum {
++	ISP_CCP2_MODE_MIPI = 0,
++	ISP_CCP2_MODE_CCP2 = 1,
++};
++
++/**
++ * struct isp_ccp2_platform_data - CCP2 interface platform data
++ * @strobe_clk_pol: Strobe/clock polarity
++ *		0 - Non Inverted, 1 - Inverted
++ * @crc: Enable the cyclic redundancy check
++ * @ccp2_mode: Enable CCP2 compatibility mode
++ *		ISP_CCP2_MODE_MIPI - MIPI-CSI1 mode
++ *		ISP_CCP2_MODE_CCP2 - CCP2 mode
++ * @phy_layer: Physical layer selection
++ *		ISP_CCP2_PHY_DATA_CLOCK - Data/clock physical layer
++ *		ISP_CCP2_PHY_DATA_STROBE - Data/strobe physical layer
++ * @vpclk_div: Video port output clock control
++ */
++struct isp_ccp2_platform_data {
++	unsigned int strobe_clk_pol:1;
++	unsigned int crc:1;
++	unsigned int ccp2_mode:1;
++	unsigned int phy_layer:1;
++	unsigned int vpclk_div:2;
++};
++
++/**
++ * struct isp_csi2_platform_data - CSI2 interface platform data
++ * @crc: Enable the cyclic redundancy check
++ * @vpclk_div: Video port output clock control
++ */
++struct isp_csi2_platform_data {
++	unsigned crc:1;
++	unsigned vpclk_div:2;
++};
++
++struct isp_subdev_i2c_board_info {
++	struct i2c_board_info *board_info;
++	int i2c_adapter_id;
++};
++
++struct isp_v4l2_subdevs_group {
++	struct isp_subdev_i2c_board_info *subdevs;
++	enum isp_interface_type interface;
++	union {
++		struct isp_parallel_platform_data parallel;
++		struct isp_ccp2_platform_data ccp2;
++		struct isp_csi2_platform_data csi2;
++	} bus; /* gcc < 4.6.0 chokes on anonymous union initializers */
++};
++
++struct isp_platform_data {
++	struct isp_v4l2_subdevs_group *subdevs;
++	void (*set_constraints)(struct isp_device *isp, bool enable);
++};
++
++#endif	/* __MEDIA_OMAP3ISP_H__ */
+-- 
+1.7.4.1
+

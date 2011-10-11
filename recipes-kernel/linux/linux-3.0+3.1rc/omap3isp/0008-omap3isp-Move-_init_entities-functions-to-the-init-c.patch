@@ -1,0 +1,625 @@
+From c2ec75c015b4589ae04d828d0eab955e1ecc6fdb Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Thu, 22 Sep 2011 21:59:26 +0200
+Subject: [PATCH 08/27] omap3isp: Move *_init_entities() functions to the init/cleanup section
+
+Group all init/cleanup functions together to make the code more
+readable.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Enrico Butera <ebutera@users.berlios.de>
+---
+ drivers/media/video/omap3isp/ispccdc.c    |   62 ++++++++--------
+ drivers/media/video/omap3isp/ispccp2.c    |  112 ++++++++++++++--------------
+ drivers/media/video/omap3isp/ispcsi2.c    |   84 +++++++++++-----------
+ drivers/media/video/omap3isp/isppreview.c |   94 ++++++++++++------------
+ drivers/media/video/omap3isp/ispresizer.c |   90 ++++++++++++------------
+ drivers/media/video/omap3isp/ispstat.c    |   36 +++++-----
+ 6 files changed, 239 insertions(+), 239 deletions(-)
+
+diff --git a/drivers/media/video/omap3isp/ispccdc.c b/drivers/media/video/omap3isp/ispccdc.c
+index 1e6a3df..464ca59 100644
+--- a/drivers/media/video/omap3isp/ispccdc.c
++++ b/drivers/media/video/omap3isp/ispccdc.c
+@@ -2144,6 +2144,37 @@ static const struct media_entity_operations ccdc_media_ops = {
+ 	.link_setup = ccdc_link_setup,
+ };
+ 
++void omap3isp_ccdc_unregister_entities(struct isp_ccdc_device *ccdc)
++{
++	v4l2_device_unregister_subdev(&ccdc->subdev);
++	omap3isp_video_unregister(&ccdc->video_out);
++}
++
++int omap3isp_ccdc_register_entities(struct isp_ccdc_device *ccdc,
++	struct v4l2_device *vdev)
++{
++	int ret;
++
++	/* Register the subdev and video node. */
++	ret = v4l2_device_register_subdev(vdev, &ccdc->subdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&ccdc->video_out, vdev);
++	if (ret < 0)
++		goto error;
++
++	return 0;
++
++error:
++	omap3isp_ccdc_unregister_entities(ccdc);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * ISP CCDC initialisation and cleanup
++ */
++
+ /*
+  * ccdc_init_entities - Initialize V4L2 subdev and media entity
+  * @ccdc: ISP CCDC module
+@@ -2196,37 +2227,6 @@ static int ccdc_init_entities(struct isp_ccdc_device *ccdc)
+ 	return 0;
+ }
+ 
+-void omap3isp_ccdc_unregister_entities(struct isp_ccdc_device *ccdc)
+-{
+-	v4l2_device_unregister_subdev(&ccdc->subdev);
+-	omap3isp_video_unregister(&ccdc->video_out);
+-}
+-
+-int omap3isp_ccdc_register_entities(struct isp_ccdc_device *ccdc,
+-	struct v4l2_device *vdev)
+-{
+-	int ret;
+-
+-	/* Register the subdev and video node. */
+-	ret = v4l2_device_register_subdev(vdev, &ccdc->subdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&ccdc->video_out, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	omap3isp_ccdc_unregister_entities(ccdc);
+-	return ret;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * ISP CCDC initialisation and cleanup
+- */
+-
+ /*
+  * omap3isp_ccdc_init - CCDC module initialization.
+  * @dev: Device pointer specific to the OMAP3 ISP.
+diff --git a/drivers/media/video/omap3isp/ispccp2.c b/drivers/media/video/omap3isp/ispccp2.c
+index b8e0863..883a282 100644
+--- a/drivers/media/video/omap3isp/ispccp2.c
++++ b/drivers/media/video/omap3isp/ispccp2.c
+@@ -1032,6 +1032,48 @@ static const struct media_entity_operations ccp2_media_ops = {
+ };
+ 
+ /*
++ * omap3isp_ccp2_unregister_entities - Unregister media entities: subdev
++ * @ccp2: Pointer to ISP CCP2 device
++ */
++void omap3isp_ccp2_unregister_entities(struct isp_ccp2_device *ccp2)
++{
++	v4l2_device_unregister_subdev(&ccp2->subdev);
++	omap3isp_video_unregister(&ccp2->video_in);
++}
++
++/*
++ * omap3isp_ccp2_register_entities - Register the subdev media entity
++ * @ccp2: Pointer to ISP CCP2 device
++ * @vdev: Pointer to v4l device
++ * return negative error code or zero on success
++ */
++
++int omap3isp_ccp2_register_entities(struct isp_ccp2_device *ccp2,
++				    struct v4l2_device *vdev)
++{
++	int ret;
++
++	/* Register the subdev and video nodes. */
++	ret = v4l2_device_register_subdev(vdev, &ccp2->subdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&ccp2->video_in, vdev);
++	if (ret < 0)
++		goto error;
++
++	return 0;
++
++error:
++	omap3isp_ccp2_unregister_entities(ccp2);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * ISP ccp2 initialisation and cleanup
++ */
++
++/*
+  * ccp2_init_entities - Initialize ccp2 subdev and media entity.
+  * @ccp2: Pointer to ISP CCP2 device
+  * return negative error code or zero on success
+@@ -1095,62 +1137,6 @@ static int ccp2_init_entities(struct isp_ccp2_device *ccp2)
+ }
+ 
+ /*
+- * omap3isp_ccp2_unregister_entities - Unregister media entities: subdev
+- * @ccp2: Pointer to ISP CCP2 device
+- */
+-void omap3isp_ccp2_unregister_entities(struct isp_ccp2_device *ccp2)
+-{
+-	v4l2_device_unregister_subdev(&ccp2->subdev);
+-	omap3isp_video_unregister(&ccp2->video_in);
+-}
+-
+-/*
+- * omap3isp_ccp2_register_entities - Register the subdev media entity
+- * @ccp2: Pointer to ISP CCP2 device
+- * @vdev: Pointer to v4l device
+- * return negative error code or zero on success
+- */
+-
+-int omap3isp_ccp2_register_entities(struct isp_ccp2_device *ccp2,
+-				    struct v4l2_device *vdev)
+-{
+-	int ret;
+-
+-	/* Register the subdev and video nodes. */
+-	ret = v4l2_device_register_subdev(vdev, &ccp2->subdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&ccp2->video_in, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	omap3isp_ccp2_unregister_entities(ccp2);
+-	return ret;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * ISP ccp2 initialisation and cleanup
+- */
+-
+-/*
+- * omap3isp_ccp2_cleanup - CCP2 un-initialization
+- * @isp : Pointer to ISP device
+- */
+-void omap3isp_ccp2_cleanup(struct isp_device *isp)
+-{
+-	struct isp_ccp2_device *ccp2 = &isp->isp_ccp2;
+-
+-	omap3isp_video_cleanup(&ccp2->video_in);
+-	media_entity_cleanup(&ccp2->subdev.entity);
+-
+-	regulator_put(ccp2->vdds_csib);
+-}
+-
+-/*
+  * omap3isp_ccp2_init - CCP2 initialization.
+  * @isp : Pointer to ISP device
+  * return negative error code or zero on success
+@@ -1195,3 +1181,17 @@ out:
+ 
+ 	return ret;
+ }
++
++/*
++ * omap3isp_ccp2_cleanup - CCP2 un-initialization
++ * @isp : Pointer to ISP device
++ */
++void omap3isp_ccp2_cleanup(struct isp_device *isp)
++{
++	struct isp_ccp2_device *ccp2 = &isp->isp_ccp2;
++
++	omap3isp_video_cleanup(&ccp2->video_in);
++	media_entity_cleanup(&ccp2->subdev.entity);
++
++	regulator_put(ccp2->vdds_csib);
++}
+diff --git a/drivers/media/video/omap3isp/ispcsi2.c b/drivers/media/video/omap3isp/ispcsi2.c
+index 5612e95..2c9bffc 100644
+--- a/drivers/media/video/omap3isp/ispcsi2.c
++++ b/drivers/media/video/omap3isp/ispcsi2.c
+@@ -1187,6 +1187,37 @@ static const struct media_entity_operations csi2_media_ops = {
+ 	.link_setup = csi2_link_setup,
+ };
+ 
++void omap3isp_csi2_unregister_entities(struct isp_csi2_device *csi2)
++{
++	v4l2_device_unregister_subdev(&csi2->subdev);
++	omap3isp_video_unregister(&csi2->video_out);
++}
++
++int omap3isp_csi2_register_entities(struct isp_csi2_device *csi2,
++				    struct v4l2_device *vdev)
++{
++	int ret;
++
++	/* Register the subdev and video nodes. */
++	ret = v4l2_device_register_subdev(vdev, &csi2->subdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&csi2->video_out, vdev);
++	if (ret < 0)
++		goto error;
++
++	return 0;
++
++error:
++	omap3isp_csi2_unregister_entities(csi2);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * ISP CSI2 initialisation and cleanup
++ */
++
+ /*
+  * csi2_init_entities - Initialize subdev and media entity.
+  * @csi2: Pointer to csi2 structure.
+@@ -1239,48 +1270,6 @@ static int csi2_init_entities(struct isp_csi2_device *csi2)
+ 	return 0;
+ }
+ 
+-void omap3isp_csi2_unregister_entities(struct isp_csi2_device *csi2)
+-{
+-	v4l2_device_unregister_subdev(&csi2->subdev);
+-	omap3isp_video_unregister(&csi2->video_out);
+-}
+-
+-int omap3isp_csi2_register_entities(struct isp_csi2_device *csi2,
+-				    struct v4l2_device *vdev)
+-{
+-	int ret;
+-
+-	/* Register the subdev and video nodes. */
+-	ret = v4l2_device_register_subdev(vdev, &csi2->subdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&csi2->video_out, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	omap3isp_csi2_unregister_entities(csi2);
+-	return ret;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * ISP CSI2 initialisation and cleanup
+- */
+-
+-/*
+- * omap3isp_csi2_cleanup - Routine for module driver cleanup
+- */
+-void omap3isp_csi2_cleanup(struct isp_device *isp)
+-{
+-	struct isp_csi2_device *csi2a = &isp->isp_csi2a;
+-
+-	omap3isp_video_cleanup(&csi2a->video_out);
+-	media_entity_cleanup(&csi2a->subdev.entity);
+-}
+-
+ /*
+  * omap3isp_csi2_init - Routine for module driver init
+  */
+@@ -1317,3 +1306,14 @@ fail:
+ 	omap3isp_csi2_cleanup(isp);
+ 	return ret;
+ }
++
++/*
++ * omap3isp_csi2_cleanup - Routine for module driver cleanup
++ */
++void omap3isp_csi2_cleanup(struct isp_device *isp)
++{
++	struct isp_csi2_device *csi2a = &isp->isp_csi2a;
++
++	omap3isp_video_cleanup(&csi2a->video_out);
++	media_entity_cleanup(&csi2a->subdev.entity);
++}
+diff --git a/drivers/media/video/omap3isp/isppreview.c b/drivers/media/video/omap3isp/isppreview.c
+index 84a18b6..b926ebb 100644
+--- a/drivers/media/video/omap3isp/isppreview.c
++++ b/drivers/media/video/omap3isp/isppreview.c
+@@ -1966,8 +1966,44 @@ static const struct media_entity_operations preview_media_ops = {
+ 	.link_setup = preview_link_setup,
+ };
+ 
++void omap3isp_preview_unregister_entities(struct isp_prev_device *prev)
++{
++	v4l2_device_unregister_subdev(&prev->subdev);
++	omap3isp_video_unregister(&prev->video_in);
++	omap3isp_video_unregister(&prev->video_out);
++}
++
++int omap3isp_preview_register_entities(struct isp_prev_device *prev,
++	struct v4l2_device *vdev)
++{
++	int ret;
++
++	/* Register the subdev and video nodes. */
++	ret = v4l2_device_register_subdev(vdev, &prev->subdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&prev->video_in, vdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&prev->video_out, vdev);
++	if (ret < 0)
++		goto error;
++
++	return 0;
++
++error:
++	omap3isp_preview_unregister_entities(prev);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * ISP previewer initialisation and cleanup
++ */
++
+ /*
+- * review_init_entities - Initialize subdev and media entity.
++ * preview_init_entities - Initialize subdev and media entity.
+  * @prev : Pointer to preview structure
+  * return -ENOMEM or zero on success
+  */
+@@ -2044,52 +2080,6 @@ static int preview_init_entities(struct isp_prev_device *prev)
+ 	return 0;
+ }
+ 
+-void omap3isp_preview_unregister_entities(struct isp_prev_device *prev)
+-{
+-	v4l2_device_unregister_subdev(&prev->subdev);
+-	omap3isp_video_unregister(&prev->video_in);
+-	omap3isp_video_unregister(&prev->video_out);
+-}
+-
+-int omap3isp_preview_register_entities(struct isp_prev_device *prev,
+-	struct v4l2_device *vdev)
+-{
+-	int ret;
+-
+-	/* Register the subdev and video nodes. */
+-	ret = v4l2_device_register_subdev(vdev, &prev->subdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&prev->video_in, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&prev->video_out, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	omap3isp_preview_unregister_entities(prev);
+-	return ret;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * ISP previewer initialisation and cleanup
+- */
+-
+-void omap3isp_preview_cleanup(struct isp_device *isp)
+-{
+-	struct isp_prev_device *prev = &isp->isp_prev;
+-
+-	v4l2_ctrl_handler_free(&prev->ctrls);
+-	omap3isp_video_cleanup(&prev->video_in);
+-	omap3isp_video_cleanup(&prev->video_out);
+-	media_entity_cleanup(&prev->subdev.entity);
+-}
+-
+ /*
+  * isp_preview_init - Previewer initialization.
+  * @dev : Pointer to ISP device
+@@ -2114,3 +2104,13 @@ out:
+ 
+ 	return ret;
+ }
++
++void omap3isp_preview_cleanup(struct isp_device *isp)
++{
++	struct isp_prev_device *prev = &isp->isp_prev;
++
++	v4l2_ctrl_handler_free(&prev->ctrls);
++	omap3isp_video_cleanup(&prev->video_in);
++	omap3isp_video_cleanup(&prev->video_out);
++	media_entity_cleanup(&prev->subdev.entity);
++}
+diff --git a/drivers/media/video/omap3isp/ispresizer.c b/drivers/media/video/omap3isp/ispresizer.c
+index 78ce040..224b0b9 100644
+--- a/drivers/media/video/omap3isp/ispresizer.c
++++ b/drivers/media/video/omap3isp/ispresizer.c
+@@ -1608,6 +1608,42 @@ static const struct media_entity_operations resizer_media_ops = {
+ 	.link_setup = resizer_link_setup,
+ };
+ 
++void omap3isp_resizer_unregister_entities(struct isp_res_device *res)
++{
++	v4l2_device_unregister_subdev(&res->subdev);
++	omap3isp_video_unregister(&res->video_in);
++	omap3isp_video_unregister(&res->video_out);
++}
++
++int omap3isp_resizer_register_entities(struct isp_res_device *res,
++				       struct v4l2_device *vdev)
++{
++	int ret;
++
++	/* Register the subdev and video nodes. */
++	ret = v4l2_device_register_subdev(vdev, &res->subdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&res->video_in, vdev);
++	if (ret < 0)
++		goto error;
++
++	ret = omap3isp_video_register(&res->video_out, vdev);
++	if (ret < 0)
++		goto error;
++
++	return 0;
++
++error:
++	omap3isp_resizer_unregister_entities(res);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * ISP resizer initialization and cleanup
++ */
++
+ /*
+  * resizer_init_entities - Initialize resizer subdev and media entity.
+  * @res : Pointer to resizer device structure
+@@ -1672,51 +1708,6 @@ static int resizer_init_entities(struct isp_res_device *res)
+ 	return 0;
+ }
+ 
+-void omap3isp_resizer_unregister_entities(struct isp_res_device *res)
+-{
+-	v4l2_device_unregister_subdev(&res->subdev);
+-	omap3isp_video_unregister(&res->video_in);
+-	omap3isp_video_unregister(&res->video_out);
+-}
+-
+-int omap3isp_resizer_register_entities(struct isp_res_device *res,
+-				       struct v4l2_device *vdev)
+-{
+-	int ret;
+-
+-	/* Register the subdev and video nodes. */
+-	ret = v4l2_device_register_subdev(vdev, &res->subdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&res->video_in, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = omap3isp_video_register(&res->video_out, vdev);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	omap3isp_resizer_unregister_entities(res);
+-	return ret;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * ISP resizer initialization and cleanup
+- */
+-
+-void omap3isp_resizer_cleanup(struct isp_device *isp)
+-{
+-	struct isp_res_device *res = &isp->isp_res;
+-
+-	omap3isp_video_cleanup(&res->video_in);
+-	omap3isp_video_cleanup(&res->video_out);
+-	media_entity_cleanup(&res->subdev.entity);
+-}
+-
+ /*
+  * isp_resizer_init - Resizer initialization.
+  * @isp : Pointer to ISP device
+@@ -1739,3 +1730,12 @@ out:
+ 
+ 	return ret;
+ }
++
++void omap3isp_resizer_cleanup(struct isp_device *isp)
++{
++	struct isp_res_device *res = &isp->isp_res;
++
++	omap3isp_video_cleanup(&res->video_in);
++	omap3isp_video_cleanup(&res->video_out);
++	media_entity_cleanup(&res->subdev.entity);
++}
+diff --git a/drivers/media/video/omap3isp/ispstat.c b/drivers/media/video/omap3isp/ispstat.c
+index 4ffddd2..253b32f 100644
+--- a/drivers/media/video/omap3isp/ispstat.c
++++ b/drivers/media/video/omap3isp/ispstat.c
+@@ -1022,24 +1022,6 @@ void omap3isp_stat_dma_isr(struct ispstat *stat)
+ 	__stat_isr(stat, 1);
+ }
+ 
+-static int isp_stat_init_entities(struct ispstat *stat, const char *name,
+-				  const struct v4l2_subdev_ops *sd_ops)
+-{
+-	struct v4l2_subdev *subdev = &stat->subdev;
+-	struct media_entity *me = &subdev->entity;
+-
+-	v4l2_subdev_init(subdev, sd_ops);
+-	snprintf(subdev->name, V4L2_SUBDEV_NAME_SIZE, "OMAP3 ISP %s", name);
+-	subdev->grp_id = 1 << 16;	/* group ID for isp subdevs */
+-	subdev->flags |= V4L2_SUBDEV_FL_HAS_EVENTS | V4L2_SUBDEV_FL_HAS_DEVNODE;
+-	v4l2_set_subdevdata(subdev, stat);
+-
+-	stat->pad.flags = MEDIA_PAD_FL_SINK;
+-	me->ops = NULL;
+-
+-	return media_entity_init(me, 1, &stat->pad, 0);
+-}
+-
+ int omap3isp_stat_subscribe_event(struct v4l2_subdev *subdev,
+ 				  struct v4l2_fh *fh,
+ 				  struct v4l2_event_subscription *sub)
+@@ -1070,6 +1052,24 @@ int omap3isp_stat_register_entities(struct ispstat *stat,
+ 	return v4l2_device_register_subdev(vdev, &stat->subdev);
+ }
+ 
++static int isp_stat_init_entities(struct ispstat *stat, const char *name,
++				  const struct v4l2_subdev_ops *sd_ops)
++{
++	struct v4l2_subdev *subdev = &stat->subdev;
++	struct media_entity *me = &subdev->entity;
++
++	v4l2_subdev_init(subdev, sd_ops);
++	snprintf(subdev->name, V4L2_SUBDEV_NAME_SIZE, "OMAP3 ISP %s", name);
++	subdev->grp_id = 1 << 16;	/* group ID for isp subdevs */
++	subdev->flags |= V4L2_SUBDEV_FL_HAS_EVENTS | V4L2_SUBDEV_FL_HAS_DEVNODE;
++	v4l2_set_subdevdata(subdev, stat);
++
++	stat->pad.flags = MEDIA_PAD_FL_SINK;
++	me->ops = NULL;
++
++	return media_entity_init(me, 1, &stat->pad, 0);
++}
++
+ int omap3isp_stat_init(struct ispstat *stat, const char *name,
+ 		       const struct v4l2_subdev_ops *sd_ops)
+ {
+-- 
+1.7.4.1
+
