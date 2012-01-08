@@ -17,6 +17,9 @@ S = "${WORKDIR}/x-loader-${PV}"
 # TODO: hack, there is no license file in archive
 LIC_FILES_CHKSUM = "file://README;md5=fb7a7e60aceaa99c529b6c667dfcf474"
 
+SRC_URI[md5sum] = "911d16c1a7c959b19f2d74628b7741df"
+SRC_URI[sha256sum] = "9f6c723481bc1ac400f4181efe8a086369faf5fa48fb29099982b3a48452ee26"
+
 do_compile () {
 	unset LDFLAGS CFLAGS CPPFLAGS
 	scripts/./autobuild.sh ${TARGET_PREFIX}
