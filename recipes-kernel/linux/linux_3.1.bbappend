@@ -41,9 +41,11 @@ SRC_URI = "git://git.igep.es/pub/scm/linux-omap-2.6.git;protocol=git \
            file://tvp5150/0020-tvp5150-Migrate-to-media-controller-framework-and-ad.patch \
            file://tvp5150/0021-tvp5150-compile-fixes-and-added-missing-entity_clean.patch \
            \
+           file://igep/0001-twl4030-disable-voice-if.patch \
            file://igep/0022-exp-igep0022-add-tvp5151-support.patch \
            file://igep/0023-igep00x0-fix-camera-platform-data.patch \
            file://igep/0027-omap3isp-bug-fixes.patch \
+           \
            file://defconfig \
           "
 
