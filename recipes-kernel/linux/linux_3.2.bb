@@ -5,7 +5,7 @@ COMPATIBLE_MACHINE = "igep0020"
 DESCRIPTION = "Linux kernel for TI processors - IGEP board"
 KERNEL_IMAGETYPE = "uImage"
 
-DEFAULT_PREFERENCE = "-99"
+#DEFAULT_PREFERENCE = "-99"
 
 PV = "3.2"
 #SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
