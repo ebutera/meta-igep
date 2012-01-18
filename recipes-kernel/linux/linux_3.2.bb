@@ -11,7 +11,7 @@ PV = "3.2"
 #SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "a"
+MACHINE_KERNEL_PR_append = "b"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git;tag=v3.2 \
             \
@@ -24,6 +24,7 @@ SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;pro
             file://igep/0007-board-igep0020-fix-mux-for-tvp5150-gpio-powerdown.patch \
             file://igep/0008-board-igep0020-enable-bt656-mode.patch \
             file://igep/0009-ASoC-TWL4030-Disable-REG_VOICE_IF-by-default.patch \
+            file://igep/0013-board-igep0020-force-twl4030-codec-registers-reset-a.patch \
             \
             file://rs485/0010-omap-serial-add-RS-485-standard-support.patch \
             file://rs485/0011-omap-serial-Fix-bug-when-using-rs485-mode.patch \
