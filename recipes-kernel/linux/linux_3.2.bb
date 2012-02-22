@@ -24,11 +24,14 @@ SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;pro
             file://igep/0007-board-igep0020-fix-mux-for-tvp5150-gpio-powerdown.patch \
             file://igep/0008-board-igep0020-enable-bt656-mode.patch \
             file://igep/0009-ASoC-TWL4030-Disable-REG_VOICE_IF-by-default.patch \
-            file://igep/0013-board-igep0020-force-twl4030-codec-registers-reset-a.patch \
             \
             file://rs485/0010-omap-serial-add-RS-485-standard-support.patch \
             file://rs485/0011-omap-serial-Fix-bug-when-using-rs485-mode.patch \
             file://rs485/0012-omap-serial-Fix-bug-when-transmitting-more-than-16-b.patch \
+            \
+            file://igep/0013-board-igep0020-force-twl4030-codec-registers-reset-a.patch \
+            file://igep/0014-board-igep0020-use-gpmc_onenand_init-to-init-flash.patch \
+            file://igep/0015-mtd-OneNAND-Fix-bufferram-management-if-chip-has-2-p.patch \
             \
             file://defconfig"
 
