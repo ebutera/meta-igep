@@ -5,6 +5,11 @@ PRIORITY = "optional"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4c6cde5df68eff615d36789dc18edd3b"
 
+# No patches for other machines yet
+COMPATIBLE_MACHINE = "(igep0020)"
+
+DEFAULT_PREFERENCE_igep0020 = "1"
+
 PROVIDES = "virtual/bootloader"
 
 DEPENDS = "mtd-utils"
@@ -19,6 +24,11 @@ UBOOT_BINARY ?= "u-boot.bin"
 UBOOT_IMAGE ?= "u-boot-${MACHINE}-${PV}-${PR}.bin"
 UBOOT_SYMLINK ?= "u-boot-${MACHINE}.bin"
 UBOOT_MAKE_TARGET ?= "all"
+
+SRC_URI = "git://git.igep.es/pub/scm/u-boot-arm.git;protocol=git \
+          "
+
+S = "${WORKDIR}/git"
 
 do_configure () {
 	oe_runmake ${UBOOT_MACHINE}
@@ -49,7 +59,7 @@ do_install () {
 
 FILES_${PN} = "/boot"
 # no gnu_hash in uboot.bin, by design, so skip QA
-INSANE_SKIP_${PN} = True
+INSANE_SKIP_${PN} = "True"
 
 PACKAGES += "${PN}-fw-utils"
 FILES_${PN}-fw-utils = "${sysconfdir} ${base_sbindir}"
