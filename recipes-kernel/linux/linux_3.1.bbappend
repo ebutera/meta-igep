@@ -3,7 +3,7 @@
 FILESEXTRAPATHS := "${THISDIR}/${PN}-${PV}"
 COMPATIBLE_MACHINE_igep0020 = "(igep0020)"
 
-PRINC = "1"
+PRINC = "2"
 
 # 05/10/2011
 #SRCREV_pn-${PN} = "22ad4e035cbf4df1fc6286e989aee32b5dc51720"
@@ -45,6 +45,10 @@ SRC_URI = "git://git.igep.es/pub/scm/linux-omap-2.6.git;protocol=git \
            file://igep/0022-exp-igep0022-add-tvp5151-support.patch \
            file://igep/0023-igep00x0-fix-camera-platform-data.patch \
            file://igep/0027-omap3isp-bug-fixes.patch \
+           \
+           file://rs485/0001-omap-serial-add-RS-485-standard-support.patch \
+           file://rs485/0002-omap-serial-Fix-bug-when-using-rs485-mode.patch \
+           file://rs485/0003-omap-serial-Fix-bug-when-transmitting-more-than-16-b.patch \
            \
            file://defconfig \
           "
