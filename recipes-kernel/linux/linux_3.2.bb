@@ -11,7 +11,7 @@ PV = "3.2"
 #SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "b"
+MACHINE_KERNEL_PR_append = "c"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git;tag=v3.2 \
             \
