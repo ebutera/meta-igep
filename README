@@ -1,6 +1,6 @@
 This layer depends on:
 
-URI: git://git.angstrom-distribution.org/meta-texasinstruments
+URI: git://github.com/Angstrom-distribution/meta-ti.git
 branch: master
 revision: HEAD
 
@@ -29,4 +29,4 @@ IGEPv2-OMAP3530 + expansion board rev.B: tested video capture with PAL source.
 * Note on DM3730
 
 Depending on silicon it is possible that it will not work reliably with high loads or dsp/sgx usage
-because of some missing smartreflex bits. Kernel 3.0 will support it so an update is planned.
+because of some missing smartreflex bits. Use kernel parameter "mpurate=800" as a temporary workaround.
