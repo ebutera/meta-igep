@@ -11,7 +11,7 @@ PV = "3.2"
 #SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "c"
+MACHINE_KERNEL_PR_append = "e"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git;tag=v3.2 \
             \
@@ -32,6 +32,11 @@ SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;pro
             file://igep/0013-board-igep0020-force-twl4030-codec-registers-reset-a.patch \
             file://igep/0014-board-igep0020-use-gpmc_onenand_init-to-init-flash.patch \
             file://igep/0015-mtd-OneNAND-Fix-bufferram-management-if-chip-has-2-p.patch \
+            file://igep/0016-igep0020-add-opp-init.patch \
+            file://igep/0017-igep0020-fix-regulators.patch \
+            file://igep/0018-omap3-Add-basic-support-for-720MHz-part.patch \
+            file://igep/0019-omap3-nand-Make-board_onenand_init-visible-to-board-.patch \
+            file://igep/0020-igep0020-Add-support-for-Micron-NAND-Flash-storage-m.patch \
             \
             file://defconfig"
 
