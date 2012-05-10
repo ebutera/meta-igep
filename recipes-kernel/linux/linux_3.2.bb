@@ -11,7 +11,7 @@ PV = "3.2"
 #SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "e"
+MACHINE_KERNEL_PR_append = "f"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git;tag=v3.2 \
             \
@@ -37,6 +37,19 @@ SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;pro
             file://igep/0018-omap3-Add-basic-support-for-720MHz-part.patch \
             file://igep/0019-omap3-nand-Make-board_onenand_init-visible-to-board-.patch \
             file://igep/0020-igep0020-Add-support-for-Micron-NAND-Flash-storage-m.patch \
+            \
+            file://sakoman/0001-cpufreq-OMAP-cleanup-for-multi-SoC-support-move-into.patch \
+            file://sakoman/0002-cpufreq-OMAP-Add-SMP-support-for-OMAP4.patch \
+            file://sakoman/0003-cpufreq-OMAP-Enable-all-CPUs-in-shared-policy-mask.patch \
+            file://sakoman/0004-cpufreq-OMAP-notify-even-with-bad-boot-frequency.patch \
+            file://sakoman/0005-cpufreq-OMAP-move-clk-name-decision-to-init.patch \
+            file://sakoman/0006-cpufreq-OMAP-deny-initialization-if-no-mpudev.patch \
+            file://sakoman/0007-cpufreq-OMAP-dont-support-freq_table.patch \
+            file://sakoman/0008-cpufreq-OMAP-only-supports-OPP-library.patch \
+            file://sakoman/0009-cpufreq-OMAP-put-clk-if-cpu_init-failed.patch \
+            file://sakoman/0010-cpufreq-OMAP-fix-freq_table-leak.patch \
+            file://sakoman/0011-cpufreq-OMAP-fixup-for-omap_device-changes-include-l.patch \
+            file://sakoman/0012-omap-mmc-Adjust-dto-to-eliminate-timeout-errors.patch \
             \
             file://defconfig"
 
