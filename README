@@ -1,32 +1,63 @@
+This README file contains information on building the meta-igep
+BSP layer. Please see the corresponding sections below for details.
+
+Dependencies
+============
+
 This layer depends on:
 
-URI: git://github.com/Angstrom-distribution/meta-ti.git
-branch: master
-revision: HEAD
+  URI: git://git.yoctoproject.org/poky
+  branch: denzil
 
-Layer maintainer: Enrico Butera <ebutera@users.berlios.de>
+  URI: git://github.com/ebufera/meta-igep.git
+  branch: denzil
 
-* U-Boot args
+Patches
+=======
 
-At the u-boot prompt of a stock IGEPv2 board:
+Please submit any patches against this BSP sending and email to the
+maintainers:
 
-setenv bootargs-base 'mem=99M@0x80000000 mem=384M@0x88000000 console=ttyO2,115200n8 console=tty0 omapfb.mode=dvi:1280x720MR-16@60 mpurate=auto'
+  Enrico Bufera <ebufera [at] users.berlios.de>
+  Enric Balletbo <eballetbo [at] gmail.com>
 
-IGEPv2 + expansion board rev.B:
+Table of Contents
+=================
 
-setenv bootargs-base 'mem=99M@0x80000000 mem=384M@0x88000000 console=ttyO2,115200n8 buddy=igep0022 buddy.modem=yes buddy.revision=B nohlt'
+ I. Board Support Package (BSP)
+II. Building the meta-igep BSP layer
 
-Note: the "nohlt" parameter is needed when capturing video because of a bug that is still not fixed.
 
+I. Board Support Package (BSP)
+=========================================
 
-* Tested on...
+This is the first stable release of the UNOFFICIAL OE-core/Yocto layer
+for IGEP boards.
 
-IGEPv2-OMAP3530: boot tested a console-image, cpufreq working (cpu scaling from 125MHz to 720MHz)
-IGEPv2-DM3730: boot tested a console-image, cpufreq working (cpu scaling from 300MHz to 1GHz)
+In this first release, we only support basic BSP images that can be used
+for booting any IGEP technology based boards.
 
-IGEPv2-OMAP3530 + expansion board rev.B: tested video capture with PAL source.
+II. Building the meta-igep BSP layer
+=========================================
 
-* Note on DM3730
+In order to build an image with BSP support for a given release, you
+need to download the corresponding BSP repository.
 
-Depending on silicon it is possible that it will not work reliably with high loads or dsp/sgx usage
-because of some missing smartreflex bits. Use kernel parameter "mpurate=800" as a temporary workaround.
+Having done that, and assuming you downloaded the BSP contents
+at the top-level of your yocto build tree, you can build a igep
+image by adding the location of the meta-igep layer to
+bblayers.conf, e.g.:
+
+        yocto/meta-igep \  
+
+To enable the igep layer, add the igep00x0 MACHINE to local.conf:
+
+  MACHINE ?= "igep00x0"
+
+You should then be able to build a igep image as such:
+
+  $ source oe-init-build-env
+  $ bitbake core-image-sato
+
+At the end of a successful build, you should have a image that
+you can boot from flash or a micro-SD card.
