@@ -9,7 +9,7 @@ This layer depends on:
   URI: git://git.yoctoproject.org/poky
   branch: denzil
 
-  URI: git://github.com/ebufera/meta-igep.git
+  URI: git://github.com/ebutera/meta-igep.git
   branch: denzil
 
 Patches
@@ -18,7 +18,7 @@ Patches
 Please submit any patches against this BSP sending and email to the
 maintainers:
 
-  Enrico Bufera <ebufera [at] users.berlios.de>
+  Enrico Butera <ebutera [at] users.berlios.de>
   Enric Balletbo <eballetbo [at] gmail.com>
 
 Table of Contents
