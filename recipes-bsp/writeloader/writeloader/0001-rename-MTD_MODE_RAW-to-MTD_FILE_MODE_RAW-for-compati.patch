@@ -1,0 +1,26 @@
+From b43f8884c267442e0ff4bdc3327a8f621557b34f Mon Sep 17 00:00:00 2001
+From: Robert Woerle <robert@linuxdevelopment.de>
+Date: Fri, 3 Aug 2012 11:23:37 +0200
+Subject: [PATCH] rename MTD_MODE_RAW to MTD_FILE_MODE_RAW for compatibility
+
+Signed-off-by: Robert Woerle <robert@linuxdevelopment.de>
+---
+ writeloader.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/writeloader.c b/writeloader.c
+index b442b91..92d223f 100644
+--- a/writeloader.c
++++ b/writeloader.c
+@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
+ 
+ 	if (flash_type == NAND) {
+ 		/* The device has to be accessed in RAW mode to fill oob area */
+-		res = ioctl(ofd, MTDFILEMODE, (void *) MTD_MODE_RAW);
++		res = ioctl(ofd, MTDFILEMODE, (void *) MTD_FILE_MODE_RAW);
+ 
+ 		if (res) {
+ 			perror("RAW mode access");
+-- 
+1.7.9.5
+
