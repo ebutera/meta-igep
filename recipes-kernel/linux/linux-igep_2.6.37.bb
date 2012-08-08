@@ -8,16 +8,17 @@ COMPATIBLE_MACHINE_igep00x0 = "igep00x0"
 
 inherit kernel kernel-arch
 
-PR = "r1"
-KV = "v${PV}-2"
+PR = "r4"
+KV = "${PV}-4"
 
-SRC_URI = "git://git.isee.biz/pub/scm/linux-omap-2.6.git;protocol=git;tag=${KV};branch=linux-2.6.37.y \
-	file://0136621a974bb450b21683088723721364ec8631.patch \
-	"
+SRC_URI = "http://downloads.isee.biz/pub/releases/linux_kernel/v${KV}/linux-omap-${KV}.tar.gz"
+
+SRC_URI[md5sum] = "f76ad40bd054c16fef4023cf1bce5c50"
+SRC_URI[sha256sum] = "8977643d6ab6412d77cd1884c854d070f4785d54880fa3100fa07c3a0b649a4d"
 
 do_configure() {
 	rm -f ${S}/.config || true
 	oe_runmake igep00x0_defconfig
 }
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/linux-omap-${KV}"
