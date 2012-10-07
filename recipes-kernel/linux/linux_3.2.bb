@@ -1,6 +1,6 @@
 require recipes-kernel/linux/linux.inc
 
-COMPATIBLE_MACHINE = "igep0020"
+COMPATIBLE_MACHINE = "igep00x0"
 
 DESCRIPTION = "Linux kernel for TI processors - IGEP board"
 KERNEL_IMAGETYPE = "uImage"
