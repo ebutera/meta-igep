@@ -15,10 +15,7 @@ Dependencies
 This layer depends on:
 
   URI: git://git.yoctoproject.org/poky
-  branch: denzil
-
-  URI: git://github.com/ebutera/meta-igep.git
-  branch: denzil
+  branch: master
 
 Patches
 =======
