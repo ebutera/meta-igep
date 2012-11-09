@@ -15,7 +15,7 @@ Dependencies
 This layer depends on:
 
   URI: git://git.yoctoproject.org/poky
-  branch: master
+  branch: danny
 
 Patches
 =======
