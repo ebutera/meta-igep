@@ -1,9 +1,12 @@
-require recipes-kernel/linux/linux.inc
+inherit kernel
 
 COMPATIBLE_MACHINE = "igep00x0"
 
 DESCRIPTION = "Linux kernel for TI processors - IGEP board"
+SECTION = "kernel"
+LICENSE = "GPLv2"
 KERNEL_IMAGETYPE = "uImage"
+LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
 PV = "3.2"
 
