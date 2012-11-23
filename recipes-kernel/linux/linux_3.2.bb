@@ -5,10 +5,7 @@ COMPATIBLE_MACHINE = "igep00x0"
 DESCRIPTION = "Linux kernel for TI processors - IGEP board"
 KERNEL_IMAGETYPE = "uImage"
 
-#DEFAULT_PREFERENCE = "-99"
-
 PV = "3.2"
-#SRCREV_pn-${PN} = "9e79e3e9dd9672b37ac9412e9a926714306551fe"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
 MACHINE_KERNEL_PR_append = "f"
