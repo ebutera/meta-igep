@@ -14,11 +14,12 @@ DEFAULT_PREFERENCE = "-1"
 PV = "3.7+git${SRCPV}"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "b"
+MACHINE_KERNEL_PR_append = "c"
 
 SRCREV = "${AUTOREV}"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git"
 SRC_URI += "file://defconfig"
+SRC_URI += "file://0001-ARM-OMAP3-igep0020-Set-DSS-pins-in-correct-mux-mode.patch"
 
 S = "${WORKDIR}/git"
