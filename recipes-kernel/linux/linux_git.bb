@@ -14,7 +14,7 @@ DEFAULT_PREFERENCE = "-1"
 PV = "3.7+git${SRCPV}"
 
 # The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "c"
+MACHINE_KERNEL_PR_append = "d"
 
 SRCREV = "${AUTOREV}"
 
