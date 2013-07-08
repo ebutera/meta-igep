@@ -1,25 +1,32 @@
+DESCRIPTION = "Mainline Linux Kernel"
+SECTION = "kernel"
+LICENSE = "GPLv2"
+KERNEL_IMAGETYPE = "zImage"
+LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
+
 inherit kernel
+require recipes-kernel/linux/linux-dtb.inc
 
 COMPATIBLE_MACHINE = "igep00x0"
 
-DESCRIPTION = "mainline Linux kernel for TI processors - IGEP board"
-SECTION = "kernel"
-LICENSE = "GPLv2"
-KERNEL_IMAGETYPE = "uImage"
-LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
+KERNEL_DEVICETREE = "\
+	arch/arm/boot/dts/omap3-igep0020.dts \
+	arch/arm/boot/dts/omap3-igep0030.dts \
+"
 
 # Don't make this the default kernel, right now it is only for testing purposes
 DEFAULT_PREFERENCE = "-1"
 
-PV = "3.7+git${SRCPV}"
+PR = "r1"
+PV = "3.10+git${SRCPV}"
 
-# The main PR is now using MACHINE_KERNEL_PR, for omap3 see conf/machine/include/omap3.inc
-MACHINE_KERNEL_PR_append = "d"
-
+# Set autorev for development purposes
 SRCREV = "${AUTOREV}"
 
 SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git"
-SRC_URI += "file://defconfig"
-SRC_URI += "file://0001-ARM-OMAP3-igep0020-Set-DSS-pins-in-correct-mux-mode.patch"
+
+do_configure() {
+	oe_runmake omap2plus_defconfig
+}
 
 S = "${WORKDIR}/git"
