@@ -18,9 +18,9 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 # This revision corresponds to the tag "v2013.07-0"
 # We use the revision in order to avoid having to fetch it from the
 # repo during parse
-SRCREV = "081334a21abd79d000958f0337ad85afe924816e"
+SRCREV = "9dfd3b780193ca055a07a41c93c4da9c2fe8666f"
 
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "git://git.isee.biz/pub/scm/u-boot-arm.git;branch=u-boot-2013.07.y;protocol=git"
 
