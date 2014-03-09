@@ -22,14 +22,18 @@ KERNEL_DEVICETREE_igep0033 = "\
 
 # Don't make this the default kernel, right now it is only for testing purposes
 DEFAULT_PREFERENCE = "-1"
+# Set as default for following machines
+DEFAULT_PREFERENCE_igep0020 = "1"
+DEFAULT_PREFERENCE_igep0030 = "1"
+DEFAULT_PREFERENCE_igep0033 = "1"
 
 PR = "r0"
-PV = "3.14-rc4+git${SRCPV}"
+PV = "3.13"
 
-# This commit corresponds to tag 3.14-rc4
-SRCREV = "cfbf8d4857c26a8a307fb7cd258074c9dcd8c691"
+# This commit corresponds to tag 3.13 + some fixes
+SRCREV = "0a789497eece1ee060d0e3c8ff981b0a7aafbdee"
 
-SRC_URI += "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git;protocol=git \
+SRC_URI += "git://github.com/eballetbo/linux.git;branch=linux-3.13.y \
 	file://default.cfg \
 	"
 

@@ -53,9 +53,17 @@ bblayers.conf, e.g.:
 
         yocto/meta-igep \  
 
-To enable the igep layer, add the igep00x0 MACHINE to local.conf:
+To enable the igep layer, add one of the supported MACHINE to local.conf:
 
-  MACHINE ?= "igep00x0"
+  MACHINE ?= "igep0020"
+
+or
+
+  MACHINE ?= "igep0030"
+
+or
+
+  MACHINE ?= "igep0033"
 
 You should then be able to build an IGEP image as such:
 
